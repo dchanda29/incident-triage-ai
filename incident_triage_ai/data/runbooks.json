@@ -1,0 +1,33 @@
+[
+  {
+    "title": "Payment provider credential failure",
+    "services": ["payments-api", "checkout-api"],
+    "symptoms": "Payment requests fail with 500 responses, credential validation errors, or missing provider secret messages.",
+    "actions": [
+      "Verify STRIPE_SECRET_KEY and webhook secrets in production.",
+      "Compare runtime secrets against the previous successful deployment.",
+      "Rollback payments-api if the secret cannot be restored within the incident SLA."
+    ]
+  },
+  {
+    "title": "Upstream timeout degradation",
+    "services": ["checkout-api", "orders-api"],
+    "symptoms": "Request latency increases, upstream timeout errors appear, and retries amplify traffic.",
+    "actions": [
+      "Check upstream dependency health.",
+      "Reduce retry fan-out.",
+      "Enable degraded mode for non-critical workflows."
+    ]
+  },
+  {
+    "title": "Database connection pool exhaustion",
+    "services": ["orders-api", "inventory-api"],
+    "symptoms": "Database timeout errors, high connection count, slow queries, and elevated p95 latency.",
+    "actions": [
+      "Inspect pool usage and slow query logs.",
+      "Temporarily scale database capacity.",
+      "Reduce worker concurrency until the backlog clears."
+    ]
+  }
+]
+

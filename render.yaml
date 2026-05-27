@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: incident-triage-ai
+    runtime: docker
+    plan: free
+    healthCheckPath: /health
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: CORS_ALLOW_ORIGINS
+        value: "*"

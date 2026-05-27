@@ -1,0 +1,24 @@
+[
+  {
+    "timestamp": "2026-05-26T09:05:00Z",
+    "service": "payments-api",
+    "version": "2026.05.26.1",
+    "status": "deployed",
+    "summary": "Moved payment provider configuration from static config to environment-backed secrets."
+  },
+  {
+    "timestamp": "2026-05-26T08:40:00Z",
+    "service": "checkout-api",
+    "version": "2026.05.26.0",
+    "status": "deployed",
+    "summary": "Added retry metadata to checkout responses."
+  },
+  {
+    "timestamp": "2026-05-25T17:30:00Z",
+    "service": "orders-api",
+    "version": "2026.05.25.3",
+    "status": "deployed",
+    "summary": "Improved order confirmation event publishing."
+  }
+]
+

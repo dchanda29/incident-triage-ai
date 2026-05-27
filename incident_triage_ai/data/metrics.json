@@ -1,0 +1,24 @@
+[
+  {
+    "timestamp": "2026-05-26T09:20:00Z",
+    "service": "payments-api",
+    "error_rate_percent": 18.7,
+    "p95_latency_ms": 940,
+    "requests_per_minute": 1240
+  },
+  {
+    "timestamp": "2026-05-26T09:20:00Z",
+    "service": "checkout-api",
+    "error_rate_percent": 7.4,
+    "p95_latency_ms": 1280,
+    "requests_per_minute": 1880
+  },
+  {
+    "timestamp": "2026-05-26T09:20:00Z",
+    "service": "orders-api",
+    "error_rate_percent": 1.2,
+    "p95_latency_ms": 420,
+    "requests_per_minute": 910
+  }
+]
+

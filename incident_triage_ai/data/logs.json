@@ -1,0 +1,38 @@
+[
+  {
+    "timestamp": "2026-05-26T09:12:11Z",
+    "service": "payments-api",
+    "level": "ERROR",
+    "message": "Payment authorization failed: STRIPE_SECRET_KEY is missing from runtime configuration",
+    "trace_id": "trc_pay_001"
+  },
+  {
+    "timestamp": "2026-05-26T09:13:03Z",
+    "service": "payments-api",
+    "level": "CRITICAL",
+    "message": "Checkout payment flow returned 500 because provider credential validation failed",
+    "trace_id": "trc_pay_002"
+  },
+  {
+    "timestamp": "2026-05-26T09:14:45Z",
+    "service": "checkout-api",
+    "level": "ERROR",
+    "message": "POST /checkout failed after payments-api returned upstream 500",
+    "trace_id": "trc_chk_001"
+  },
+  {
+    "timestamp": "2026-05-26T09:16:22Z",
+    "service": "orders-api",
+    "level": "WARN",
+    "message": "Order confirmation delayed because payment status is pending",
+    "trace_id": "trc_ord_001"
+  },
+  {
+    "timestamp": "2026-05-26T08:51:10Z",
+    "service": "inventory-api",
+    "level": "INFO",
+    "message": "Inventory reservation completed successfully",
+    "trace_id": "trc_inv_001"
+  }
+]
+
