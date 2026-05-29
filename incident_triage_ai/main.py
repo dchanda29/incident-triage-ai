@@ -5,7 +5,13 @@ from fastapi.staticfiles import StaticFiles
 
 from incident_triage_ai.agent import IncidentTriageAgent
 from incident_triage_ai.config import settings
-from incident_triage_ai.models import HealthResponse, IncidentAnalysisRequest, IncidentAnalysisResponse
+from incident_triage_ai.models import (
+    HealthResponse,
+    IncidentAnalysisRequest,
+    IncidentAnalysisResponse,
+    IncidentFollowUpRequest,
+    IncidentFollowUpResponse,
+)
 
 app = FastAPI(
     title=settings.app_name,
@@ -37,3 +43,8 @@ def health() -> HealthResponse:
 @app.post("/incidents/analyze", response_model=IncidentAnalysisResponse)
 def analyze_incident(request: IncidentAnalysisRequest) -> IncidentAnalysisResponse:
     return agent.analyze(request)
+
+
+@app.post("/incidents/follow-up", response_model=IncidentFollowUpResponse)
+def answer_incident_follow_up(request: IncidentFollowUpRequest) -> IncidentFollowUpResponse:
+    return agent.answer_follow_up(request)

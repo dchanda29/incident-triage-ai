@@ -32,6 +32,7 @@ The system:
 4. Looks up matching runbook entries
 5. Correlates the evidence
 6. Returns a structured incident report
+7. Answers follow-up questions grounded in the incident report
 
 It also includes a lightweight browser console for demos and local usage.
 
@@ -139,6 +140,14 @@ curl -X POST http://127.0.0.1:8000/incidents/analyze ^
   -d "{\"question\":\"Why are payments failing after the latest deployment?\",\"service\":\"payments-api\",\"severity\":\"high\"}"
 ```
 
+Ask a follow-up question about an existing report:
+
+```bash
+curl -X POST http://127.0.0.1:8000/incidents/follow-up ^
+  -H "Content-Type: application/json" ^
+  -d "{\"question\":\"Should we rollback or fix forward?\",\"incident_report\":{...}}"
+```
+
 Example response:
 
 ```json
@@ -166,6 +175,7 @@ pytest
 ## Roadmap
 
 - Add OpenAI tool-calling for natural language reasoning over gathered evidence
+- Upgrade follow-up answers from deterministic rules to LLM-backed grounded Q&A
 - Persist incidents, evidence, and remediation outcomes in PostgreSQL
 - Add Redis/Celery or BullMQ-style async analysis jobs
 - Add GitHub integration for recent commits and pull requests

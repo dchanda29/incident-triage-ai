@@ -35,8 +35,18 @@ class IncidentAnalysisResponse(BaseModel):
     recommended_actions: list[str]
 
 
+class IncidentFollowUpRequest(BaseModel):
+    question: str = Field(..., min_length=5, examples=["Should we rollback or fix forward?"])
+    incident_report: IncidentAnalysisResponse
+
+
+class IncidentFollowUpResponse(BaseModel):
+    answer: str
+    grounded_in: list[str]
+    suggested_next_questions: list[str]
+
+
 class HealthResponse(BaseModel):
     status: str
     app: str
     environment: str
-

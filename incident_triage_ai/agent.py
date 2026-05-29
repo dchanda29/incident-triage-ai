@@ -1,6 +1,12 @@
 from uuid import uuid4
 
-from incident_triage_ai.models import EvidenceItem, IncidentAnalysisRequest, IncidentAnalysisResponse
+from incident_triage_ai.models import (
+    EvidenceItem,
+    IncidentAnalysisRequest,
+    IncidentAnalysisResponse,
+    IncidentFollowUpRequest,
+    IncidentFollowUpResponse,
+)
 from incident_triage_ai.tools.observability import (
     get_recent_deployments,
     get_service_metrics,
@@ -26,6 +32,36 @@ class IncidentTriageAgent:
             impacted_services=impacted_services,
             evidence=evidence,
             recommended_actions=self._recommended_actions(evidence),
+        )
+
+    def answer_follow_up(self, request: IncidentFollowUpRequest) -> IncidentFollowUpResponse:
+        report = request.incident_report
+        question = request.question.lower()
+        evidence_titles = [item.title for item in report.evidence[:3]]
+
+        if any(word in question for word in {"rollback", "revert", "deploy"}):
+            answer = self._rollback_answer(report)
+        elif any(word in question for word in {"first", "start", "priority", "check"}):
+            answer = self._first_check_answer(report)
+        elif any(word in question for word in {"prevent", "avoid", "future", "again"}):
+            answer = self._prevention_answer(report)
+        elif any(word in question for word in {"confirm", "verify", "prove"}):
+            answer = self._verification_answer(report)
+        else:
+            answer = (
+                f"Based on the current report, focus on the likely root cause first: "
+                f"{report.likely_root_cause} The strongest next step is: "
+                f"{report.recommended_actions[0] if report.recommended_actions else 'review the top evidence items.'}"
+            )
+
+        return IncidentFollowUpResponse(
+            answer=answer,
+            grounded_in=evidence_titles,
+            suggested_next_questions=[
+                "What should I check first?",
+                "How do I verify the root cause?",
+                "Should I rollback or fix forward?",
+            ],
         )
 
     def _gather_evidence(self, request: IncidentAnalysisRequest) -> list[EvidenceItem]:
@@ -116,3 +152,76 @@ class IncidentTriageAgent:
 
         return sorted(services)
 
+    def _rollback_answer(self, report: IncidentAnalysisResponse) -> str:
+        joined = self._report_text(report)
+        if "deployment" in joined and ("credential" in joined or "secret" in joined):
+            return (
+                "Rollback is reasonable if restoring the missing credential will take longer than "
+                "your incident SLA. If the secret can be restored quickly, fix forward by updating "
+                "the production environment, then verify error rate recovery for the impacted service."
+            )
+
+        if "deployment" in joined:
+            return (
+                "Compare the latest deployment with the last healthy version. Roll back if the failure "
+                "started immediately after deploy and the owner cannot produce a low-risk fix quickly."
+            )
+
+        return (
+            "Do not rollback only because the service is unhealthy. First confirm the issue maps to a "
+            "recent deploy; otherwise prioritize dependency, database, or configuration checks."
+        )
+
+    def _first_check_answer(self, report: IncidentAnalysisResponse) -> str:
+        if report.recommended_actions:
+            return (
+                f"Start with this action: {report.recommended_actions[0]} Then check the top evidence "
+                f"item, because it has the strongest signal in the report."
+            )
+
+        return "Start by reviewing the highest-scored evidence item and the latest deployment."
+
+    def _prevention_answer(self, report: IncidentAnalysisResponse) -> str:
+        joined = self._report_text(report)
+        if "credential" in joined or "secret" in joined:
+            return (
+                "Add startup configuration validation, deployment smoke tests for payment authorization, "
+                "and alerting on provider credential errors. This prevents the service from accepting "
+                "traffic with missing production secrets."
+            )
+
+        if "timeout" in joined or "latency" in joined:
+            return (
+                "Add dependency latency alerts, circuit breakers, and timeout dashboards. Also track "
+                "retry volume so degradation does not amplify traffic during incidents."
+            )
+
+        return (
+            "Turn the top evidence into a monitor, add a runbook entry for the remediation path, and "
+            "store this incident outcome so future triage can compare against it."
+        )
+
+    def _verification_answer(self, report: IncidentAnalysisResponse) -> str:
+        joined = self._report_text(report)
+        if "credential" in joined or "secret" in joined:
+            return (
+                "Verify by checking the production secret value exists, restarting or refreshing the "
+                "affected service if needed, and confirming payment 500s drop while successful "
+                "authorizations increase."
+            )
+
+        if "timeout" in joined or "latency" in joined:
+            return (
+                "Verify by comparing p95 latency, timeout count, and upstream health before and after "
+                "the suspected failure window."
+            )
+
+        return (
+            "Verify by checking whether the highest-scored evidence item changes after the remediation. "
+            "The report should show lower error signals and fewer related log entries."
+        )
+
+    def _report_text(self, report: IncidentAnalysisResponse) -> str:
+        evidence = " ".join(item.details for item in report.evidence)
+        actions = " ".join(report.recommended_actions)
+        return f"{report.summary} {report.likely_root_cause} {evidence} {actions}".lower()

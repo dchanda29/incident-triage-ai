@@ -1,5 +1,5 @@
 from incident_triage_ai.agent import IncidentTriageAgent
-from incident_triage_ai.models import IncidentAnalysisRequest, Severity
+from incident_triage_ai.models import IncidentAnalysisRequest, IncidentFollowUpRequest, Severity
 
 
 def test_agent_detects_payment_credential_incident() -> None:
@@ -30,3 +30,25 @@ def test_agent_returns_structured_report_without_service_filter() -> None:
     assert response.incident_id.startswith("inc_")
     assert response.evidence
     assert "checkout-api" in response.impacted_services
+
+
+def test_agent_answers_follow_up_from_existing_report() -> None:
+    agent = IncidentTriageAgent()
+    report = agent.analyze(
+        IncidentAnalysisRequest(
+            question="Why are payments failing after the latest deployment?",
+            service="payments-api",
+            severity=Severity.high,
+        )
+    )
+
+    response = agent.answer_follow_up(
+        IncidentFollowUpRequest(
+            question="Should we rollback or fix forward?",
+            incident_report=report,
+        )
+    )
+
+    assert "rollback" in response.answer.lower()
+    assert response.grounded_in
+    assert response.suggested_next_questions
